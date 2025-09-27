@@ -1,0 +1,154 @@
+<!doctype html>
+<html lang="es">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width,initial-scale=1" />
+  <title>Pacientes & Citas — Panel</title>
+<link rel="stylesheet" href="style.css">
+  
+  <script src="https://cdn.tailwindcss.com"></script>
+
+
+</head>
+<body class="bg-slate-50 text-slate-800">
+  <header class="bg-white border-b">
+    <div class="max-w-7xl mx-auto px-4 py-4 flex items-center justify-between">
+      <div class="flex items-center gap-4">
+        <div class="text-2xl font-semibold">Clínica | Panel</div>
+        <div class="text-sm text-slate-500">Gestión de pacientes y citas</div>
+      </div>
+      <div class="flex items-center gap-3">
+        <button id="btnOpenPatient" class="px-4 py-2 bg-emerald-600 text-white rounded hover:bg-emerald-700">Nuevo paciente</button>
+        <button id="btnOpenCita" class="px-4 py-2 bg-blue-600 text-white rounded hover:bg-blue-700">Agendar cita</button>
+      </div>
+    </div>
+  </header>
+
+  <main class="max-w-7xl mx-auto px-4 py-8 grid gap-6 lg:grid-cols-3">
+    <!-- Panel izquierdo: Pacientes -->
+    <section class="lg:col-span-1">
+      <div class="bg-white rounded-lg p-4 card-shadow">
+        <div class="flex items-center justify-between mb-3">
+          <h2 class="text-lg font-semibold">Pacientes</h2>
+          <span id="totalPatients" class="text-sm text-slate-500">0</span>
+        </div>
+
+        <div class="mb-3">
+          <input id="searchPatient" type="search" placeholder="Buscar por nombre, documento o correo"
+                 class="w-full rounded border px-3 py-2 text-sm focus:ring-1 focus:ring-indigo-300" />
+        </div>
+
+        <div class="max-h-[56vh] overflow-auto">
+          <ul id="patientList" class="space-y-2"></ul>
+        </div>
+      </div>
+    </section>
+
+    <!-- Panel central: Citas -->
+    <section class="lg:col-span-2">
+      <div class="bg-white rounded-lg p-4 card-shadow">
+        <div class="flex items-center justify-between mb-4">
+          <div>
+            <h2 class="text-xl font-semibold">Citas</h2>
+            <div class="text-sm text-slate-500">Agenda y gestión rápida</div>
+          </div>
+
+          <div class="flex gap-2 items-center">
+            <select id="filterStatus" class="rounded border px-3 py-2 text-sm">
+              <option value="all">Todas</option>
+              <option value="pendiente">Pendientes</option>
+              <option value="confirmada">Confirmadas</option>
+              <option value="cancelada">Canceladas</option>
+            </select>
+
+            <input id="filterDate" type="date" class="rounded border px-3 py-2 text-sm" />
+            <button id="btnClearFilters" class="px-3 py-2 rounded border text-sm">Limpiar</button>
+          </div>
+        </div>
+
+        <div class="overflow-auto">
+          <table class="w-full text-sm">
+            <thead class="text-slate-600">
+              <tr class="border-b">
+                <th class="text-left py-2 px-3">Paciente</th>
+                <th class="text-left py-2 px-3">Fecha</th>
+                <th class="text-left py-2 px-3">Hora</th>
+                <th class="text-left py-2 px-3">Odontólogo</th>
+                <th class="text-left py-2 px-3">Estado</th>
+                <th class="text-right py-2 px-3">Acciones</th>
+              </tr>
+            </thead>
+            <tbody id="citasTableBody" class="divide-y"></tbody>
+          </table>
+        </div>
+      </div>
+    </section>
+  </main>
+
+  <!-- Modal: Crear Paciente -->
+  <div id="modalPatient" class="fixed inset-0 hidden items-center justify-center z-50">
+    <div class="modal-bg absolute inset-0"></div>
+    <div class="relative bg-white rounded-lg w-full max-w-md p-6 z-10">
+      <div class="flex justify-between items-center mb-4">
+        <h3 class="text-lg font-semibold">Nuevo paciente</h3>
+        <button id="closePatient" class="text-slate-500 hover:text-slate-800">✕</button>
+      </div>
+      <form id="formPatient" class="space-y-3">
+        <input type="text" id="p_nombre" placeholder="Nombre completo" class="w-full border rounded px-3 py-2" required />
+        <input type="text" id="p_documento" placeholder="Documento" class="w-full border rounded px-3 py-2" />
+        <input type="tel" id="p_telefono" placeholder="Teléfono" class="w-full border rounded px-3 py-2" />
+        <input type="email" id="p_correo" placeholder="Correo electrónico" class="w-full border rounded px-3 py-2" />
+        <div class="flex justify-end gap-2">
+          <button type="button" id="cancelPatient" class="px-4 py-2 rounded border">Cancelar</button>
+          <button type="submit" class="px-4 py-2 rounded bg-emerald-600 text-white">Guardar</button>
+        </div>
+      </form>
+    </div>
+  </div>
+
+  <!-- Modal: Crear Cita -->
+  <div id="modalCita" class="fixed inset-0 hidden items-center justify-center z-50">
+    <div class="modal-bg absolute inset-0"></div>
+    <div class="relative bg-white rounded-lg w-full max-w-lg p-6 z-10">
+      <div class="flex justify-between items-center mb-4">
+        <h3 class="text-lg font-semibold">Agendar cita</h3>
+        <button id="closeCita" class="text-slate-500 hover:text-slate-800">✕</button>
+      </div>
+      <form id="formCita" class="space-y-3">
+        <label class="text-sm text-slate-600">Paciente</label>
+        <select id="c_paciente" class="w-full border rounded px-3 py-2"></select>
+
+        <div class="grid grid-cols-2 gap-3">
+          <div>
+            <label class="text-sm text-slate-600">Fecha</label>
+            <input type="date" id="c_fecha" class="w-full border rounded px-3 py-2" required />
+          </div>
+          <div>
+            <label class="text-sm text-slate-600">Hora</label>
+            <input type="time" id="c_hora" class="w-full border rounded px-3 py-2" required />
+          </div>
+        </div>
+
+        <input type="text" id="c_odontologo" placeholder="Odontólogo" class="w-full border rounded px-3 py-2" />
+        <div class="flex justify-between items-center">
+          <select id="c_estado" class="border rounded px-3 py-2">
+            <option value="pendiente">Pendiente</option>
+            <option value="confirmada">Confirmada</option>
+            <option value="cancelada">Cancelada</option>
+          </select>
+
+          <div class="flex gap-2">
+            <button type="button" id="cancelCita" class="px-4 py-2 rounded border">Cancelar</button>
+            <button type="submit" class="px-4 py-2 rounded bg-blue-600 text-white">Agendar</button>
+          </div>
+        </div>
+      </form>
+    </div>
+  </div>
+
+  <!-- Toast sencillo -->
+  <div id="toast" class="fixed bottom-6 right-6 hidden bg-slate-900 text-white px-4 py-2 rounded shadow">Mensaje</div>
+
+  <script src="script.js"></script>
+</body>
+</html>
